@@ -1,11 +1,21 @@
-test:
-  message: Salam, bu mesaj Config Server-dən gəlir!
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-
-jwt:
-  secret: "hesabla-cox-uzun-ve-tehlukesiz-JWT-imza-acari-2026-dev-only-desiyisdir"
-  expiration-ms: 86400000
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: >-
+          invoiceCreated:com.hesabla.invoicing.event.InvoiceCreatedEvent,
+          invoiceStatusChanged:com.hesabla.invoicing.event.InvoiceStatusChangedEvent
+    consumer:
+      group-id: hesabla-notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: com.hesabla.notification.event
+        spring.json.type.mapping: >-
+          invoiceCreated:com.hesabla.notification.event.InvoiceCreatedEvent,
+          invoiceStatusChanged:com.hesabla.notification.event.InvoiceStatusChangedEvent

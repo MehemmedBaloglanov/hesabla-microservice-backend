@@ -12,6 +12,11 @@ import com.hesabla.invoicing.repository.InvoiceRepository;
 import com.hesabla.invoicing.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.kafka.core.KafkaTemplate;
+import com.hesabla.invoicing.event.InvoiceCreatedEvent;
+import com.hesabla.invoicing.event.InvoiceStatusChangedEvent;
+import org.springframework.kafka.core.KafkaTemplate;
+import java.time.Instant;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,13 +30,16 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
                           CustomerRepository customerRepository,
-                          ProductRepository productRepository) {
+                          ProductRepository productRepository,
+                          KafkaTemplate<String, Object> kafkaTemplate) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public InvoiceResponse create(Long tenantId, Long userId, InvoiceRequest request) {
@@ -57,7 +65,16 @@ public class InvoiceService {
 
         invoice.setTotalAmount(total);
 
+
         invoiceRepository.save(invoice);
+        kafkaTemplate.send("invoice-created", tenantId.toString(), new InvoiceCreatedEvent(
+                invoice.getId(),
+                invoice.getInvoiceNumber(),
+                tenantId,
+                invoice.getCustomer().getId(),
+                invoice.getTotalAmount(),
+                Instant.now()
+        ));
         return toResponse(invoice);
     }
 
@@ -120,7 +137,16 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Faktura tapılmadı"));
 
+        InvoiceStatus oldStatus = invoice.getStatus();
         invoice.setStatus(request.status());
+        kafkaTemplate.send("invoice-status-changed", tenantId.toString(), new InvoiceStatusChangedEvent(
+                invoice.getId(),
+                invoice.getInvoiceNumber(),
+                tenantId,
+                oldStatus.name(),
+                invoice.getStatus().name(),
+                Instant.now()
+        ));
         return toResponse(invoice);
     }
 
