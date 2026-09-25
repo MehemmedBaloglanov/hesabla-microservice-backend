@@ -40,11 +40,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (jwtService.isValid(token)) {
             Claims claims = jwtService.parseClaims(token);
-            String userId = claims.getSubject();
+
+            Long userId = Long.valueOf(claims.getSubject());
+            // DİQQƏT: claims.get("tenantId", Long.class) TƏHLÜKƏLİDİR.
+            // JJWT+Jackson kiçik ədədləri (məs. 1) JSON-dan geri
+            // parse edəndə Integer kimi saxlayır, Long kimi yox —
+            // birbaşa Long.class istəsən ClassCastException alarsan.
+            // Number.class istəyib sonra .longValue() çağırmaq hər iki
+            // halda (Integer və ya Long) düzgün işləyir.
+            Number tenantIdRaw = claims.get("tenantId", Number.class);
+            Long tenantId = tenantIdRaw != null ? tenantIdRaw.longValue() : null;
             String role = claims.get("role", String.class);
 
+            AuthenticatedUser principal = new AuthenticatedUser(userId, tenantId, role);
+
             var authentication = new UsernamePasswordAuthenticationToken(
-                    userId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                    principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

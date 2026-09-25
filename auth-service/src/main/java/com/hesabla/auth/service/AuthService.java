@@ -12,6 +12,8 @@ import com.hesabla.auth.security.JwtService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.hesabla.auth.dto.InviteRequest;
+import com.hesabla.auth.dto.InviteResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -70,5 +72,35 @@ public class AuthService {
 
         return new AuthResponse(token, user.getId(), tenant.getId(),
                 tenant.getName(), user.getEmail(), user.getRole().name());
+    }
+
+    @Transactional
+    public InviteResponse invite(Long tenantId, InviteRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("Bu email artıq istifadə olunur");
+        }
+
+        Role role;
+        try {
+            role = Role.valueOf(request.role().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Rol düzgün deyil: " + request.role());
+        }
+
+        if (role == Role.OWNER) {
+            throw new IllegalArgumentException("OWNER rolu ilə istifadəçi dəvət etmək olmaz — hər tenant-ın yalnız bir OWNER-i register zamanı yaranır");
+        }
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant tapılmadı"));
+
+        User user = new User();
+        user.setTenant(tenant);
+        user.setEmail(request.email());
+        user.setPasswordHash(passwordEncoder.encode(request.temporaryPassword()));
+        user.setRole(role);
+        userRepository.save(user);
+
+        return new InviteResponse(user.getId(), user.getEmail(), user.getRole().name(), tenant.getName());
     }
 }

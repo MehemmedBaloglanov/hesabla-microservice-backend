@@ -5,6 +5,11 @@ import com.hesabla.auth.dto.LoginRequest;
 import com.hesabla.auth.dto.RegisterRequest;
 import com.hesabla.auth.service.AuthService;
 import jakarta.validation.Valid;
+import com.hesabla.auth.dto.InviteRequest;
+import com.hesabla.auth.dto.InviteResponse;
+import com.hesabla.auth.security.AuthenticatedUser;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +42,13 @@ public class AuthController {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<String> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(401).body(ex.getMessage());
+    }
+
+    @PostMapping("/team/invite")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<InviteResponse> invite(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                                 @Valid @RequestBody InviteRequest request) {
+        InviteResponse response = authService.invite(currentUser.tenantId(), request);
+        return ResponseEntity.ok(response);
     }
 }
