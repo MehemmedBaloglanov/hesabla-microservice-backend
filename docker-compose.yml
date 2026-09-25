@@ -1,4 +1,28 @@
 services:
+  auth-postgres:
+    image: postgres:16
+    container_name: auth-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+    ports:
+      - "5434:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+
+  invoicing-postgres:
+    image: postgres:16
+    container_name: invoicing-postgres
+    environment:
+      POSTGRES_DB: invoicing_db
+      POSTGRES_USER: invoicing
+      POSTGRES_PASSWORD: invoicing
+    ports:
+      - "5433:5432"
+    volumes:
+      - invoicing_postgres_data:/var/lib/postgresql/data
+
   kafka:
     image: apache/kafka:3.9.0
     container_name: hesabla-kafka
@@ -32,4 +56,6 @@ services:
       - kafka
 
 volumes:
+  auth_postgres_data:
+  invoicing_postgres_data:
   kafka-data:
