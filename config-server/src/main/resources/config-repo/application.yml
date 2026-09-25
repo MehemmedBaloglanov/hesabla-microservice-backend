@@ -5,3 +5,7 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: "hesabla-cox-uzun-ve-tehlukesiz-JWT-imza-acari-2026-dev-only-desiyisdir"
+  expiration-ms: 86400000
