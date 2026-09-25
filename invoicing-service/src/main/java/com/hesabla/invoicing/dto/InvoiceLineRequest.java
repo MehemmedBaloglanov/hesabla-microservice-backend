@@ -11,6 +11,7 @@ public record InvoiceLineRequest(
         @NotNull(message = "Miqdar göstərilməlidir")
         @DecimalMin(value = "0.001", message = "Miqdar müsbət olmalıdır")
         BigDecimal quantity,
+        @DecimalMin(value = "0.0", message = "Vahid qiymət mənfi ola bilməz")
         BigDecimal unitPrice
 ) {
 }

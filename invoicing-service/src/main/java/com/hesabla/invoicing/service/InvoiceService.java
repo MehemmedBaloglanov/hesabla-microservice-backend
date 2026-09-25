@@ -6,26 +6,28 @@ import com.hesabla.invoicing.domain.InvoiceLine;
 import com.hesabla.invoicing.domain.InvoiceStatus;
 import com.hesabla.invoicing.domain.Product;
 import com.hesabla.invoicing.dto.*;
+import com.hesabla.invoicing.event.InvoiceCreatedEvent;
+import com.hesabla.invoicing.event.InvoiceStatusChangedEvent;
 import com.hesabla.invoicing.exception.ResourceNotFoundException;
 import com.hesabla.invoicing.repository.CustomerRepository;
 import com.hesabla.invoicing.repository.InvoiceRepository;
 import com.hesabla.invoicing.repository.ProductRepository;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.kafka.core.KafkaTemplate;
-import com.hesabla.invoicing.event.InvoiceCreatedEvent;
-import com.hesabla.invoicing.event.InvoiceStatusChangedEvent;
-import org.springframework.kafka.core.KafkaTemplate;
-import java.time.Instant;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
 public class InvoiceService {
+
+    private static final Set<InvoiceStatus> TERMINAL_STATUSES = Set.of(InvoiceStatus.PAID, InvoiceStatus.CANCELLED);
 
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
@@ -64,7 +66,6 @@ public class InvoiceService {
         }
 
         invoice.setTotalAmount(total);
-
 
         invoiceRepository.save(invoice);
         kafkaTemplate.send("invoice-created", tenantId.toString(), new InvoiceCreatedEvent(
@@ -138,6 +139,12 @@ public class InvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Faktura tapılmadı"));
 
         InvoiceStatus oldStatus = invoice.getStatus();
+
+        if (TERMINAL_STATUSES.contains(oldStatus)) {
+            throw new IllegalArgumentException(
+                    "Faktura artıq " + oldStatus + " statusundadır, statusu dəyişdirmək olmaz");
+        }
+
         invoice.setStatus(request.status());
         kafkaTemplate.send("invoice-status-changed", tenantId.toString(), new InvoiceStatusChangedEvent(
                 invoice.getId(),
@@ -153,6 +160,12 @@ public class InvoiceService {
     public void delete(Long tenantId, Long id) {
         Invoice invoice = invoiceRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Faktura tapılmadı"));
+
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
+            throw new IllegalArgumentException(
+                    "Yalnız DRAFT statuslu fakturalar silinə bilər — göndərilmiş/ödənmiş fakturanı CANCELLED statusuna keçirin");
+        }
+
         invoiceRepository.delete(invoice);
     }
 

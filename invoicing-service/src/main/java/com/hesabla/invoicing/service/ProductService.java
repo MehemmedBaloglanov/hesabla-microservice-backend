@@ -55,9 +55,7 @@ public class ProductService {
         product.setName(request.name());
         product.setDescription(request.description());
         product.setUnitPrice(request.unitPrice());
-        if (request.unit() != null && !request.unit().isBlank()) {
-            product.setUnit(request.unit());
-        }
+        product.setUnit(request.unit());
 
         return toResponse(product);
     }
