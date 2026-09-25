@@ -6,15 +6,3 @@ spring:
     name: api-gateway
   config:
     import: "configserver:http://localhost:8888"
-  cloud:
-    gateway:
-      mvc:
-        routes:
-          - id: auth-service
-            uri: lb://AUTH-SERVICE
-            predicates:
-              - Path=/api/auth/**
-          - id: invoicing-service
-            uri: lb://INVOICING-SERVICE
-            predicates:
-              - Path=/api/invoices/**,/api/customers/**,/api/products/**
