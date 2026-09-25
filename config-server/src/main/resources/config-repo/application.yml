@@ -1,0 +1,7 @@
+test:
+  message: Salam, bu mesaj Config Server-dən gəlir!
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
