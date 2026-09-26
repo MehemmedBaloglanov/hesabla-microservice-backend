@@ -109,6 +109,7 @@ public class InvoiceService {
 
         invoice.setTotalAmount(total);
 
+        invoiceRepository.saveAndFlush(invoice);
         return toResponse(invoice);
     }
 
