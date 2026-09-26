@@ -89,7 +89,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/auth_db
     depends_on:
@@ -107,7 +107,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://invoicing-postgres:5432/invoicing_db
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9094
@@ -128,7 +128,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9094
     depends_on:
@@ -146,7 +146,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8888
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       config-server:
