@@ -11,6 +11,4 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByTenantId(Long tenantId);
 
     Optional<Invoice> findByIdAndTenantId(Long id, Long tenantId);
-
-    long countByTenantId(Long tenantId);
 }

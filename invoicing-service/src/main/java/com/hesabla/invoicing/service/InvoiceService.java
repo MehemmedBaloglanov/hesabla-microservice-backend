@@ -11,6 +11,7 @@ import com.hesabla.invoicing.event.InvoiceStatusChangedEvent;
 import com.hesabla.invoicing.exception.ResourceNotFoundException;
 import com.hesabla.invoicing.repository.CustomerRepository;
 import com.hesabla.invoicing.repository.InvoiceRepository;
+import com.hesabla.invoicing.repository.InvoiceSequenceRepository;
 import com.hesabla.invoicing.repository.ProductRepository;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -32,15 +33,18 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final InvoiceSequenceRepository invoiceSequenceRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
                           CustomerRepository customerRepository,
                           ProductRepository productRepository,
+                          InvoiceSequenceRepository invoiceSequenceRepository,
                           KafkaTemplate<String, Object> kafkaTemplate) {
         this.invoiceRepository = invoiceRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.invoiceSequenceRepository = invoiceSequenceRepository;
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -115,7 +119,7 @@ public class InvoiceService {
     }
 
     private String generateInvoiceNumber(Long tenantId) {
-        long nextSequence = invoiceRepository.countByTenantId(tenantId) + 1;
+        long nextSequence = invoiceSequenceRepository.nextSequence(tenantId);
         int year = LocalDate.now().getYear();
         return "INV-" + year + "-" + String.format("%05d", nextSequence);
     }

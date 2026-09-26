@@ -25,7 +25,7 @@ public class Invoice {
     @Column(name = "tenant_id", nullable = false)
     private Long tenantId;
 
-    @Column(name = "invoice_number", nullable = false, unique = true)
+    @Column(name = "invoice_number", nullable = false)
     private String invoiceNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
