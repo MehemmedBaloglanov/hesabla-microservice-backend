@@ -1,9 +1,6 @@
 package com.hesabla.invoicing.controller;
 
-import com.hesabla.invoicing.dto.InvoiceRequest;
-import com.hesabla.invoicing.dto.InvoiceResponse;
-import com.hesabla.invoicing.dto.InvoiceStatusUpdateRequest;
-import com.hesabla.invoicing.dto.PageResponse;
+import com.hesabla.invoicing.dto.*;
 import com.hesabla.invoicing.security.AuthenticatedUser;
 import com.hesabla.invoicing.service.InvoiceService;
 import jakarta.validation.Valid;
@@ -27,6 +24,11 @@ public class InvoiceController {
     public ResponseEntity<InvoiceResponse> create(@AuthenticationPrincipal AuthenticatedUser user,
                                                   @Valid @RequestBody InvoiceRequest request) {
         return ResponseEntity.ok(invoiceService.create(user.tenantId(), user.userId(), request));
+    }
+
+    @GetMapping("/dashboard/summary")
+    public ResponseEntity<DashboardSummaryResponse> dashboardSummary(@AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(invoiceService.getDashboardSummary(user.tenantId()));
     }
 
     @GetMapping

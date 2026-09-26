@@ -17,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import com.hesabla.invoicing.repository.InvoiceStatusAggregate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -158,6 +161,33 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public PageResponse<InvoiceResponse> listAll(Long tenantId, Pageable pageable) {
         return PageResponse.from(invoiceRepository.findByTenantId(tenantId, pageable), this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public DashboardSummaryResponse getDashboardSummary(Long tenantId) {
+        List<InvoiceStatusAggregate> aggregates = invoiceRepository.aggregateByStatus(tenantId);
+
+        Map<String, Long> countByStatus = new LinkedHashMap<>();
+        for (InvoiceStatus status : InvoiceStatus.values()) {
+            countByStatus.put(status.name(), 0L);
+        }
+
+        long totalInvoices = 0;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        BigDecimal totalOutstanding = BigDecimal.ZERO;
+
+        for (InvoiceStatusAggregate agg : aggregates) {
+            countByStatus.put(agg.getStatus().name(), agg.getCount());
+            totalInvoices += agg.getCount();
+
+            if (agg.getStatus() == InvoiceStatus.PAID) {
+                totalRevenue = agg.getSum();
+            } else if (agg.getStatus() == InvoiceStatus.SENT || agg.getStatus() == InvoiceStatus.OVERDUE) {
+                totalOutstanding = totalOutstanding.add(agg.getSum());
+            }
+        }
+
+        return new DashboardSummaryResponse(totalInvoices, totalRevenue, totalOutstanding, countByStatus);
     }
 
     @Transactional(readOnly = true)
