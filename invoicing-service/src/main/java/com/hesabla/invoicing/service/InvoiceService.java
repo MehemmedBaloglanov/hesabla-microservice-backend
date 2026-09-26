@@ -13,6 +13,7 @@ import com.hesabla.invoicing.repository.CustomerRepository;
 import com.hesabla.invoicing.repository.InvoiceRepository;
 import com.hesabla.invoicing.repository.InvoiceSequenceRepository;
 import com.hesabla.invoicing.repository.ProductRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,10 +156,8 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<InvoiceResponse> listAll(Long tenantId) {
-        return invoiceRepository.findByTenantId(tenantId).stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<InvoiceResponse> listAll(Long tenantId, Pageable pageable) {
+        return PageResponse.from(invoiceRepository.findByTenantId(tenantId, pageable), this::toResponse);
     }
 
     @Transactional(readOnly = true)

@@ -3,14 +3,15 @@ package com.hesabla.invoicing.controller;
 import com.hesabla.invoicing.dto.InvoiceRequest;
 import com.hesabla.invoicing.dto.InvoiceResponse;
 import com.hesabla.invoicing.dto.InvoiceStatusUpdateRequest;
+import com.hesabla.invoicing.dto.PageResponse;
 import com.hesabla.invoicing.security.AuthenticatedUser;
 import com.hesabla.invoicing.service.InvoiceService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/invoices")
@@ -29,8 +30,9 @@ public class InvoiceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<InvoiceResponse>> listAll(@AuthenticationPrincipal AuthenticatedUser user) {
-        return ResponseEntity.ok(invoiceService.listAll(user.tenantId()));
+    public ResponseEntity<PageResponse<InvoiceResponse>> listAll(@AuthenticationPrincipal AuthenticatedUser user,
+                                                                 @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(invoiceService.listAll(user.tenantId(), pageable));
     }
 
     @GetMapping("/{id}")

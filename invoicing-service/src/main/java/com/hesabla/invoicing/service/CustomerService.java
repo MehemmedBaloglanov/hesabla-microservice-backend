@@ -3,12 +3,12 @@ package com.hesabla.invoicing.service;
 import com.hesabla.invoicing.domain.Customer;
 import com.hesabla.invoicing.dto.CustomerRequest;
 import com.hesabla.invoicing.dto.CustomerResponse;
+import com.hesabla.invoicing.dto.PageResponse;
 import com.hesabla.invoicing.exception.ResourceNotFoundException;
 import com.hesabla.invoicing.repository.CustomerRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -34,10 +34,8 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public List<CustomerResponse> listAll(Long tenantId) {
-        return customerRepository.findByTenantId(tenantId).stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<CustomerResponse> listAll(Long tenantId, Pageable pageable) {
+        return PageResponse.from(customerRepository.findByTenantId(tenantId, pageable), this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -57,13 +55,6 @@ public class CustomerService {
         customer.setAddress(request.address());
         customer.setTaxId(request.taxId());
 
-        // DİQQƏT: burada customerRepository.save(customer) ÇAĞIRMIRIQ!
-        // Metod @Transactional olduğu üçün "customer" obyekti artıq
-        // Hibernate-in idarəetdiyi (managed) vəziyyətdədir. Transaction
-        // commit olanda Hibernate "dirty checking" ilə (obyektin
-        // sahələrini yüklənən andakı ilə müqayisə edib) dəyişiklikləri
-        // avtomatik SQL UPDATE-ə çevirir. save() yalnız YENİ (hələ DB-də
-        // olmayan) entity-lər üçün lazımdır.
         return toResponse(customer);
     }
 

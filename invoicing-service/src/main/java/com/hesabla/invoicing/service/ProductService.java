@@ -1,14 +1,14 @@
 package com.hesabla.invoicing.service;
 
 import com.hesabla.invoicing.domain.Product;
+import com.hesabla.invoicing.dto.PageResponse;
 import com.hesabla.invoicing.dto.ProductRequest;
 import com.hesabla.invoicing.dto.ProductResponse;
 import com.hesabla.invoicing.exception.ResourceNotFoundException;
 import com.hesabla.invoicing.repository.ProductRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -35,10 +35,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> listAll(Long tenantId) {
-        return productRepository.findByTenantId(tenantId).stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<ProductResponse> listAll(Long tenantId, Pageable pageable) {
+        return PageResponse.from(productRepository.findByTenantId(tenantId, pageable), this::toResponse);
     }
 
     @Transactional(readOnly = true)
