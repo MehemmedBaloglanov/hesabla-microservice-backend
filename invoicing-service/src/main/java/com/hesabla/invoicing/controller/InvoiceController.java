@@ -39,6 +39,13 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getOne(user.tenantId(), id));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<InvoiceResponse> update(@AuthenticationPrincipal AuthenticatedUser user,
+                                                  @PathVariable Long id,
+                                                  @Valid @RequestBody InvoiceRequest request) {
+        return ResponseEntity.ok(invoiceService.update(user.tenantId(), id, request));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<InvoiceResponse> updateStatus(@AuthenticationPrincipal AuthenticatedUser user,
                                                         @PathVariable Long id,

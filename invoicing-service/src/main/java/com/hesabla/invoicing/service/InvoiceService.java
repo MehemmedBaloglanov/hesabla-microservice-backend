@@ -83,6 +83,35 @@ public class InvoiceService {
         return toResponse(invoice);
     }
 
+    public InvoiceResponse update(Long tenantId, Long id, InvoiceRequest request) {
+        Invoice invoice = invoiceRepository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Faktura tapılmadı"));
+
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
+            throw new IllegalArgumentException(
+                    "Yalnız DRAFT statuslu fakturalar redaktə edilə bilər — status dəyişmək üçün ayrıca endpoint istifadə edin");
+        }
+
+        Customer customer = customerRepository.findByIdAndTenantId(request.customerId(), tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Müştəri tapılmadı"));
+
+        invoice.setCustomer(customer);
+        invoice.setDueDate(request.dueDate());
+
+        invoice.getLines().clear();
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (InvoiceLineRequest lineRequest : request.lines()) {
+            InvoiceLine line = buildLine(tenantId, lineRequest);
+            invoice.addLine(line);
+            total = total.add(line.getLineTotal());
+        }
+
+        invoice.setTotalAmount(total);
+
+        return toResponse(invoice);
+    }
+
     private InvoiceLine buildLine(Long tenantId, InvoiceLineRequest request) {
         Product product = null;
         String description = request.description();
