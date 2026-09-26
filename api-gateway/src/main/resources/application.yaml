@@ -6,3 +6,10 @@ spring:
     name: api-gateway
   config:
     import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:5173
+      - http://localhost:4200

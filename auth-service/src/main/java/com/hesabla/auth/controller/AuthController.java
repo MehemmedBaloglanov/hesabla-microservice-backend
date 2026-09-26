@@ -1,18 +1,21 @@
 package com.hesabla.auth.controller;
 
 import com.hesabla.auth.dto.AuthResponse;
-import com.hesabla.auth.dto.LoginRequest;
-import com.hesabla.auth.dto.RegisterRequest;
-import com.hesabla.auth.service.AuthService;
-import jakarta.validation.Valid;
+import com.hesabla.auth.dto.CurrentUserResponse;
 import com.hesabla.auth.dto.InviteRequest;
 import com.hesabla.auth.dto.InviteResponse;
+import com.hesabla.auth.dto.LoginRequest;
+import com.hesabla.auth.dto.RegisterRequest;
+import com.hesabla.auth.dto.TeamMemberResponse;
 import com.hesabla.auth.security.AuthenticatedUser;
+import com.hesabla.auth.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,14 +37,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUserResponse> me(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(authService.getCurrentUser(currentUser.userId()));
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<String> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseEntity.status(401).body(ex.getMessage());
+    @GetMapping("/team")
+    public ResponseEntity<List<TeamMemberResponse>> team(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(authService.listTeam(currentUser.tenantId()));
     }
 
     @PostMapping("/team/invite")

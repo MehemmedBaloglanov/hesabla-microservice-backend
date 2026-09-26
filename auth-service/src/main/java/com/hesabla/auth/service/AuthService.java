@@ -4,17 +4,21 @@ import com.hesabla.auth.domain.Role;
 import com.hesabla.auth.domain.Tenant;
 import com.hesabla.auth.domain.User;
 import com.hesabla.auth.dto.AuthResponse;
+import com.hesabla.auth.dto.CurrentUserResponse;
+import com.hesabla.auth.dto.InviteRequest;
+import com.hesabla.auth.dto.InviteResponse;
 import com.hesabla.auth.dto.LoginRequest;
 import com.hesabla.auth.dto.RegisterRequest;
+import com.hesabla.auth.dto.TeamMemberResponse;
 import com.hesabla.auth.repository.TenantRepository;
 import com.hesabla.auth.repository.UserRepository;
 import com.hesabla.auth.security.JwtService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.hesabla.auth.dto.InviteRequest;
-import com.hesabla.auth.dto.InviteResponse;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -72,6 +76,22 @@ public class AuthService {
 
         return new AuthResponse(token, user.getId(), tenant.getId(),
                 tenant.getName(), user.getEmail(), user.getRole().name());
+    }
+
+    @Transactional(readOnly = true)
+    public CurrentUserResponse getCurrentUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("İstifadəçi tapılmadı"));
+        Tenant tenant = user.getTenant();
+        return new CurrentUserResponse(user.getId(), tenant.getId(), tenant.getName(),
+                user.getEmail(), user.getRole().name());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamMemberResponse> listTeam(Long tenantId) {
+        return userRepository.findByTenantId(tenantId).stream()
+                .map(u -> new TeamMemberResponse(u.getId(), u.getEmail(), u.getRole().name(), u.getCreatedAt()))
+                .toList();
     }
 
     @Transactional
